@@ -282,7 +282,7 @@
 
 <script>
 // ===========================================
-// ⚠️ هام: استبدل الرابط أدناه برابط النشر الخاص بك
+// ⚠️ هام: استبدل الرابط أدناه برابط النشر الخاص بك من Google
 const API_URL = "https://script.google.com/macros/s/AKfycbziRaSTjVRhkF15Xti9SV_4zTvXz4uzALbPS7wXLbHJpTQfEwQv5a2oyNOTfS8mNqsVmg/exec";
 // ===========================================
 
@@ -308,10 +308,23 @@ async function callApi(action, data = {}) {
 
 window.onload = function() {
   document.getElementById('stamp-img').src = STAMP_URL;
-  let dLink = document.getElementById('direct-link').innerText;
-  if(dLink && dLink.trim() !== "") sessionStorage.setItem('pending', dLink);
-  if (window.location.search.includes('exam=')) window.history.replaceState({}, document.title, window.location.pathname);
-  if(token) checkPending(); else document.getElementById('v-login').classList.remove('hidden');
+  
+  // 1. قراءة اسم الامتحان من رابط المتصفح
+  const urlParams = new URLSearchParams(window.location.search);
+  const examName = urlParams.get('exam');
+
+  if (examName) {
+      sessionStorage.setItem('pending', examName);
+      window.history.replaceState({}, document.title, window.location.pathname);
+  }
+
+  // 2. التحقق من الدخول
+  if(token) {
+      checkPending(); 
+  } else {
+      document.getElementById('v-login').classList.remove('hidden');
+  }
+
   document.addEventListener("visibilitychange", () => {
     if(document.hidden && !document.getElementById('v-exam').classList.contains('hidden')){
         st.cheats++;
@@ -544,7 +557,7 @@ function editProfile() {
 
 function loadNotes() { callApi('getStudentNote', {token:token}).then(r => { if(r.success) document.getElementById('my-notes').value = r.note; }); }
 function saveNotes() { let txt = document.getElementById('my-notes').value; callApi('saveStudentNote', {token:token, text:txt}).then(r => { const Toast = Swal.mixin({toast: true, position: 'top-end', showConfirmButton: false, timer: 3000}); Toast.fire({icon: 'success', title: 'تم الحفظ'}); }); }
-function checkBroadcast() { /* Placeholder - function missing in backend but kept for safety */ }
+function checkBroadcast() { /* Placeholder */ }
 function checkMsgs() {
     callApi('getStudentMessages', {token:token}).then(msgs => {
         if(msgs && msgs.length > 0) { document.getElementById('notif-dot').style.display = 'block'; let h = ''; msgs.forEach(m => { h += `<div style="background:var(--glass); padding:10px; margin-bottom:10px; border-radius:8px; border:1px solid var(--border)"><small style="color:#94a3b8; display:block; margin-bottom:5px">${m.date}</small><p style="margin:0; font-size:14px">${m.msg}</p></div>`; }); document.getElementById('msg-history').innerHTML = h; }
